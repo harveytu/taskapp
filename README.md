@@ -45,27 +45,48 @@ npm install
 
 4. Run the development server (on port 5003):
 ```bash
+# Using shell script (recommended)
+./dev.sh
+
+# Or using npm
 npm run dev
 ```
 The app will be available at http://localhost:5003
 
 5. Build for production:
 ```bash
+# Using shell scripts
+./deploy.sh build    # Build only
+./start.sh            # Start production server
+
+# Or using npm
 npm run build
 npm start
 ```
 
 6. Deploy the app:
 ```bash
-# Deploy to Vercel (default, recommended for Next.js)
-npm run deploy
+# Firebase Hosting (recommended for /taskapp subdirectory)
+./deploy-firebase.sh  # Build and prepare for Firebase hosting
+# Then copy out/* to your main Firebase project's public/taskapp/ directory
 
-# Deploy to Netlify
-npm run deploy netlify
+# Other platforms (Vercel/Netlify)
+./deploy.sh           # Deploy to Vercel (default) - warns about basePath
+./deploy.sh vercel    # Deploy to Vercel
+./deploy.sh netlify   # Deploy to Netlify
+./deploy.sh build     # Build only (creates out/ directory)
 
-# Build only (no deployment)
-npm run deploy build
+# Or using npm
+npm run deploy:firebase  # Firebase hosting
+npm run deploy           # Vercel
+npm run deploy netlify   # Netlify
+npm run deploy build     # Build only
 ```
+
+**Note**: 
+- For Firebase hosting at `/taskapp/`, use `./deploy-firebase.sh` (recommended)
+- For Vercel/Netlify, `./deploy.sh` will work but may need basePath adjustment
+- See `DEPLOYMENT_GUIDE.md` for details on which script to use
 
 ## Firestore Structure
 
