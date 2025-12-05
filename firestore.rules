@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Task Lists
+    match /taskLists/{listId} {
+      // Development: Allow all operations
+      allow read, write: if true;
+      
+      // Production: Uncomment and use these rules instead
+      // allow read: if request.auth != null;
+      // allow create: if request.auth != null && 
+      //   request.resource.data.userId == request.auth.uid;
+      // allow update, delete: if request.auth != null && 
+      //   resource.data.userId == request.auth.uid;
+    }
+    
+    // Tasks
+    match /tasks/{taskId} {
+      // Development: Allow all operations
+      allow read, write: if true;
+      
+      // Production: Uncomment and use these rules instead
+      // allow read: if request.auth != null;
+      // allow create: if request.auth != null && 
+      //   request.resource.data.taskListId is string;
+      // allow update, delete: if request.auth != null;
+    }
+    
+    // Settings
+    match /settings/{settingId} {
+      // Development: Allow all operations
+      allow read, write: if true;
+      
+      // Production: Uncomment and use these rules instead
+      // allow read, write: if request.auth != null && 
+      //   resource.data.userId == request.auth.uid;
+    }
+  }
+}
+
