@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="manifest" href="manifest-taskapp.json" />
+  <meta name="theme-color" content="#94a3b8" />
+  <title>Task Manager</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <link rel="stylesheet" href="css/task-theme.css?v=1.1.0" />
+</head>
+
+<body class="font-inter bg-app-indigo pb-20 mt-0">
+  
+  <!-- Main Screen -->
+  <div id="main-screen" class="opacity-100 transition-opacity duration-300">
+    
+    <div class="relative shadow-lg w-full title-container mb-4 px-4">
+      <!-- Header with Title and Controls -->
+      <div class="flex items-center justify-between mb-2 pt-2 pb-2">
+        <div class="flex items-center gap-2 flex-1">
+          <select id="task-list-dropdown" class="bg-white text-slate-700 px-3 py-2 rounded-lg font-semibold text-base border-2 border-slate-300 w-full">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+        <button id="settings-btn" class="text-white hover:text-slate-200 transition p-2" title="Settings">
+          <i class="fas fa-cog" style="font-size: 27px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mic Button Section - Centered between title and input -->
+    <div class="flex justify-center items-center px-4" style="padding-top: 5px; padding-bottom: 5px;">
+      <div class="flex flex-col items-center">
+        <button id="mic-button" class="bg-green-100 text-green-700 rounded-full font-semibold shadow-lg hover:bg-green-200 transition flex items-center justify-center" style="width: 104px; height: 104px;">
+          <i class="fas fa-microphone" style="font-size: 39px;"></i>
+        </button>
+        <p id="mic-status" class="text-black text-sm mt-2 opacity-0 transition-opacity">Listening...</p>
+      </div>
+    </div>
+
+    <!-- Text Input Section with Filter Controls -->
+    <div class="mb-4" style="padding-left: 16px; padding-right: 16px;">
+      <div class="flex gap-1 sm:gap-2 items-center flex-wrap sm:flex-nowrap">
+        <div class="flex gap-2 items-center bg-white rounded-lg shadow p-1 flex-1 min-w-0" style="min-height: 44px;">
+          <input type="text" id="task-input" placeholder="Add a task..." class="flex-1 px-3 py-1 border-none outline-none text-base min-w-0" style="min-height: auto;" />
+          <button id="add-task-btn" class="bg-green-500 text-white px-2 py-1 rounded-lg font-semibold hover:bg-green-600 transition flex-shrink-0" style="min-height: auto; min-width: 44px;">
+            <i class="fas fa-plus" style="font-size: 18px;"></i>
+          </button>
+        </div>
+        <button id="filter-completed-btn" class="bg-white text-blue-600 px-2 py-2 rounded-lg font-semibold shadow hover:bg-blue-50 transition flex items-center justify-center flex-shrink-0" style="min-width: 48px; min-height: 48px;">
+          <i id="filter-completed-icon" class="fas fa-eye" style="font-size: 22px;"></i>
+        </button>
+        <button id="toggle-all-btn" class="bg-white text-purple-600 px-2 py-2 rounded-lg font-semibold shadow hover:bg-purple-50 transition flex items-center justify-center flex-shrink-0" style="min-width: 48px; min-height: 48px;">
+          <i id="toggle-all-icon" class="fas fa-check-double" style="font-size: 22px;"></i>
+        </button>
+        <button id="undo-btn" class="bg-white text-orange-600 px-2 py-2 rounded-lg font-semibold shadow hover:bg-orange-50 transition flex items-center justify-center flex-shrink-0" style="min-width: 48px; min-height: 48px;">
+          <i class="fas fa-undo" style="font-size: 22px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="px-4 mb-4">
+      <hr class="border-gray-600">
+    </div>
+
+    <!-- Task List Container -->
+    <div id="tasks-container" class="w-full max-w-5xl mx-auto pb-20" style="padding-left: 16px; padding-right: 16px;">
+      <div id="tasks-list">
+        <p class="text-gray-500 text-center py-4">Loading tasks...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Overlay -->
+  <div id="settings-overlay" class="fixed inset-0 z-50 hidden">
+    <!-- Blurred Background -->
+    <div class="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" id="settings-backdrop"></div>
+    
+    <!-- Settings Content -->
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+        <!-- Close Button -->
+        <button id="close-settings-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition p-2" title="Close Settings">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+        
+        <!-- Header -->
+        <div class="px-6 pt-6 pb-4">
+          <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
+          <p id="app-version-display" class="text-xs text-gray-500 mt-1">Loading...</p>
+        </div>
+        
+        <!-- Settings Content -->
+        <div class="px-6 pb-6">
+          <div class="config-item">
+            <label class="config-label" for="rename-task-list-select">Rename Task List</label>
+            <select id="rename-task-list-select" class="config-input">
+              <option value="">Select a task list to rename...</option>
+            </select>
+            <div id="rename-task-list-edit-container" class="mt-2" style="display: none;">
+              <input type="text" id="rename-task-list-input" class="config-input" placeholder="Task list name...">
+              <p class="text-xs text-gray-500 mt-1">Press Enter to save, Escape to cancel</p>
+            </div>
+          </div>
+          
+          <div class="config-item">
+            <label class="config-label" for="default-task-list-select">Default Task List</label>
+            <select id="default-task-list-select" class="config-input">
+              <option value="">Select a task list...</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">This list will be shown when you open the app</p>
+          </div>
+          
+          <div class="config-item">
+            <label class="config-label" for="delete-task-list-select">Delete Task List</label>
+            <select id="delete-task-list-select" class="config-input">
+              <option value="">Select a task list to delete...</option>
+            </select>
+            <button id="delete-task-list-btn" class="w-full bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition mt-2 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+              <i class="fas fa-trash mr-2"></i>Delete Selected Task List
+            </button>
+            <p class="text-xs text-red-600 mt-1">Warning: This will permanently delete the task list and all its tasks</p>
+          </div>
+          
+          <div class="config-item">
+            <label class="config-label">Sync Data</label>
+            <button id="sync-data-btn" class="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition">
+              <i class="fas fa-sync mr-2"></i>Sync with Firestore
+            </button>
+            <p class="text-xs text-gray-500 mt-1">Fetch latest data from Firestore and update local cache</p>
+          </div>
+          
+          <button id="save-settings-btn" class="w-full bg-slate-500 text-white py-2 rounded-lg font-semibold hover:bg-slate-600 transition mt-4">
+            Save Settings
+          </button>
+          
+          <button id="exit-settings-btn" class="w-full bg-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-400 transition mt-2">
+            Exit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/firebase-config.js?v=1.1.0"></script>
+  <script src="js/task-data-manager.js?v=1.0.0"></script>
+
+  <!-- Load app directly without authentication -->
+  <script>
+    // PWA routing safeguard: If opened in standalone mode but at wrong URL, redirect
+    (function() {
+      // Check if app is in standalone mode (PWA)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          window.navigator.standalone || 
+                          document.referrer.includes('android-app://');
+      
+      // If in standalone mode and not at /taskapp, redirect
+      if (isStandalone && !window.location.pathname.includes('taskapp')) {
+        window.location.href = '/taskapp';
+        return;
+      }
+    })();
+
+    // Initialize speech recognition immediately (before Firebase loads)
+    (function() {
+      try {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = 'en-US';
+          
+          // Store in global scope for TaskApp to use
+          window._preInitSpeechRecognition = recognition;
+        }
+      } catch (e) {
+        console.error('Speech recognition initialization error:', e);
+      }
+    })();
+
+    // Load task-app.js directly
+    const script = document.createElement('script');
+    script.src = 'js/task-app.js?v=1.0.0';
+    script.onload = () => {
+      // Initialize app directly since DOMContentLoaded already fired before script loaded
+      if (window.TaskApp && window.TaskApp.init) {
+        TaskApp.init();
+      }
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
